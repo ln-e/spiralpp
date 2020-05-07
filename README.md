@@ -6,16 +6,6 @@ by Mellor, Park, Ganin et al.](https://arxiv.org/abs/1802.01561)
 
 For further details, see https://learning-to-paint.github.io for paper with generation videos.
 
-IMPALA training based on [Torchbeast](https://github.com/facebookresearch/torchbeast.git)
-Environments based on code taken from [SPIRAL](https://github.com/deepmind/spiral.git)
-
-TorchBeast comes in two variants:
-[MonoBeast](#getting-started-monobeast) and
-[PolyBeast](#faster-version-polybeast). While
-PolyBeast is more powerful (e.g. allowing training across machines),
-it's somewhat harder to install. MonoBeast requires only Python and
-PyTorch. Currently only PolyBeast is avaliable.
-
 ### Installing
 
 #### Linux
@@ -23,12 +13,12 @@ PyTorch. Currently only PolyBeast is avaliable.
 Create a new Conda environment, and install PolyBeast's requirements:
 
 ```shell
-$ conda create -n torchbeast python=3.7
-$ conda activate torchbeast
+$ conda create -n spiralpp python=3.7
+$ conda activate spiralpp
 $ pip install -r requirements.txt
 ```
 
-Install libmypaint, fluid paint based environment
+Install spiral-gym
 
 Install required packages:
 
@@ -38,22 +28,19 @@ $ pip install six setuptools numpy scipy gym
 ```
 
 **WARNING:** Make sure that you have `cmake` **3.14** or later since we rely
-on its capability to find `numpy` libraries. If your package manager doesn't
-provide it follow the installation instructions from
-[here](https://cmake.org/install/). You can check the version by
-running `cmake --version `.
+on its capability to find `numpy` libraries.
 
 Install cmake by running:
 ```shell
 $ conda install cmake
 ```
 
-Finally, run the following command to install the SPIRAL package itself:
+Finally, run the following command to install the spiral-gym package itself:
 
 ```shell
 $ git submodule update --init --recursive
 $ export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
-$ pip install -e spiral/
+$ pip install -e spiral_gym/
 ```
 
 You will also need to obtain the brush files for the `libmypaint` environment
@@ -184,7 +171,7 @@ submodules. Includes [gRPC](https://grpc.io/), .
 `torchbeast`: Contains `monobeast.py`, and `polybeast.py` and
 `polybeast_env.py`. (`monobeast.py` is currently unavailable)
 
-`spiral-envs`: libmypaint and fluidpaint based environments. ported to openai
+`spiral-gym`: libmypaint and fluidpaint based environments. ported to openai
 gym from https://github.com/deepmind/spiral/tree/master/spiral/environments
 
 ## TODO
