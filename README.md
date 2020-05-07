@@ -39,7 +39,6 @@ Finally, run the following command to install the spiral-gym package itself:
 
 ```shell
 $ git submodule update --init --recursive
-$ export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
 $ pip install -e spiral_gym/
 ```
 
