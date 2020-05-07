@@ -1,7 +1,7 @@
-gym[atari]>=0.14.0  # Installs gym and atari. Needs to happen at once.
 gitpython>=2.1  # For logging metadata.
+pandas          # For loading celeba-hq
 ## Wrappers
-opencv-python  # for atari
+opencv-python   # for environment 
 ## dev packages
 flake8
 black

@@ -1,8 +1,10 @@
 # This file taken from
 #     https://github.com/deepmind/scalable_agent/blob/
 #         cd66d00914d56c8ba2f0615d9cdeefcb169a8d70/vtrace.py
-# and modified.
-
+# and modified by (c) Facebook, Inc. and its affiliates.
+#
+# 2 May 2020 - Modified action_log_probs function modified by urw7rs
+#
 # Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,12 +49,15 @@ VTraceFromLogitsReturns = collections.namedtuple(
 VTraceReturns = collections.namedtuple("VTraceReturns", "vs pg_advantages")
 
 
-def action_log_probs(policy_logits, actions):
-    return -F.nll_loss(
-        F.log_softmax(torch.flatten(policy_logits, 0, -2), dim=-1),
-        torch.flatten(actions),
-        reduction="none",
-    ).view_as(actions)
+def action_log_probs(policy_logits, action):
+    log_prob = 0
+    for logit, action in zip(policy_logits, action):
+        log_prob += -F.nll_loss(
+            F.log_softmax(torch.flatten(logit, 0, 1), dim=-1),
+            torch.flatten(action.long(), 0, 1),
+            reduction="none",
+        ).view_as(action)
+    return log_prob
 
 
 def from_logits(
@@ -67,7 +72,6 @@ def from_logits(
     clip_pg_rho_threshold=1.0,
 ):
     """V-trace for softmax policies."""
-
     target_action_log_probs = action_log_probs(target_policy_logits, actions)
     behavior_action_log_probs = action_log_probs(behavior_policy_logits, actions)
     log_rhos = target_action_log_probs - behavior_action_log_probs
@@ -111,6 +115,7 @@ def from_importance_weights(
         values_t_plus_1 = torch.cat(
             [values[1:], torch.unsqueeze(bootstrap_value, 0)], dim=0
         )
+
         deltas = clipped_rhos * (rewards + discounts * values_t_plus_1 - values)
 
         acc = torch.zeros_like(bootstrap_value)

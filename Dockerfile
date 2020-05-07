@@ -11,7 +11,13 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     wget \
-    pkg-config
+    pkg-config \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libjson-c-dev \
+    intltool \
+    libx11-dev \
+    libxext-dev
 
 WORKDIR /src
 
@@ -30,7 +36,7 @@ RUN echo > ~/.bashrc
 RUN conda init bash
 
 # Create new environment and install some dependencies.
-RUN conda create -y -n torchbeast python=3.7 \
+RUN conda create -y -n spiralpp python=3.7 \
     protobuf \
     numpy \
     ninja \
@@ -43,7 +49,7 @@ RUN conda create -y -n torchbeast python=3.7 \
     typing
 
 # Activate environment in .bashrc.
-RUN echo "conda activate torchbeast" >> /root/.bashrc
+RUN echo "conda activate spiralpp" >> /root/.bashrc
 
 # Make bash excecute .bashrc even when running non-interactively.
 ENV BASH_ENV /root/.bashrc
@@ -57,8 +63,8 @@ ENV BASH_ENV /root/.bashrc
 # # # (https://github.com/pytorch/pytorch/issues/1022)
 # # RUN pip download torch
 # # RUN pip install torch*.whl
-
-RUN git clone --single-branch --branch v1.2.0 --recursive https://github.com/pytorch/pytorch
+#
+RUN git clone --single-branch --branch v1.5.0 --recursive https://github.com/pytorch/pytorch
 
 WORKDIR /src/pytorch
 
@@ -66,16 +72,39 @@ ENV CMAKE_PREFIX_PATH ${CONDA_PREFIX}
 
 RUN python setup.py install
 
-# Clone TorchBeast.
-WORKDIR /src/torchbeast
+WORKDIR /src
 
-COPY .git /src/torchbeast/.git
+RUN git clone --single-branch --branch v0.5.1 https://github.com/pytorch/vision.git
+
+WORKDIR /src/vision 
+
+RUN python setup.py install
+
+# Clone TorchBeast.
+WORKDIR /src/spiralpp
+
+COPY .git /src/spiralpp/.git
 
 RUN git reset --hard
 
-# Collect and install grpc.
-RUN git submodule update --init --recursive
+# install spiral env
+RUN git submodule update --init --recursive \
+    && wget -c https://github.com/mypaint/mypaint-brushes/archive/v1.3.0.tar.gz -O - | tar -xz -C third_party \
+    && git clone https://github.com/dli/paint third_party/paint \
+    && patch third_party/paint/shaders/setbristles.frag third_party/paint-setbristles.patch
 
+WORKDIR /src/spiralpp/spiral-envs
+
+RUN pip install --no-cache-dir six scipy
+
+RUN patch setup.py setup.patch
+RUN patch CMakeLists.txt cmakelists.patch
+
+RUN pip install -e .
+
+WORKDIR /src/spiralpp
+
+# Collect and install grpc.
 RUN ./scripts/install_grpc.sh
 
 # Install nest.
@@ -93,14 +122,16 @@ ENV OMP_NUM_THREADS 1
 
 # Run.
 CMD ["bash", "-c", "python -m torchbeast.polybeast \
-       --num_actors 10 \
-       --total_steps 200000000 \
-       --unroll_length 60 --batch_size 32"]
+	--dataset omniglot \
+	--mode test \
+	--use_pressure \
+	--disable_cuda]
+
 
 
 # Docker commands:
-#   docker rm torchbeast -v
-#   docker build -t torchbeast .
-#   docker run --name torchbeast torchbeast
+#   docker rm spiralpp -v
+#   docker build -t spiralpp .
+#   docker run --name spiralpp spiralpp
 # or
-#   docker run --name torchbeast -it torchbeast /bin/bash
+#   docker run --name spiralpp -it spiralpp /bin/bash
