@@ -1,3 +1,6 @@
 [submodule "third_party/grpc"]
 	path = third_party/grpc
 	url = https://github.com/grpc/grpc.git
+[submodule "spiral_gym"]
+	path = spiral_gym
+	url = https://github.com/urw7rs/spiral_gym.git
