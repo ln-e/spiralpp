@@ -37,7 +37,6 @@ RUN conda init bash
 
 # Create new environment and install some dependencies.
 RUN conda create -y -n spiralpp python=3.7 \
-    protobuf \
     numpy \
     ninja \
     pyyaml \
@@ -53,6 +52,28 @@ RUN echo "conda activate spiralpp" >> /root/.bashrc
 
 # Make bash excecute .bashrc even when running non-interactively.
 ENV BASH_ENV /root/.bashrc
+
+# Clone spiralpp.
+WORKDIR /src/spiralpp
+
+COPY .git /src/spiralpp/.git
+
+RUN git reset --hard
+
+# install spiral env
+RUN git submodule update --init --recursive \
+    && wget -c https://github.com/mypaint/mypaint-brushes/archive/v1.3.0.tar.gz -O - | tar -xz -C third_party \
+    && git clone https://github.com/dli/paint third_party/paint \
+    && patch third_party/paint/shaders/setbristles.frag third_party/paint-setbristles.patch
+
+WORKDIR /src/spiralpp/spiral-envs
+
+RUN pip install --no-cache-dir six scipy
+
+RUN patch setup.py setup.patch
+RUN patch CMakeLists.txt cmakelists.patch
+
+RUN pip install -e .
 
 # Install PyTorch.
 
@@ -80,31 +101,10 @@ WORKDIR /src/vision
 
 RUN python setup.py install
 
-# Clone TorchBeast.
-WORKDIR /src/spiralpp
-
-COPY .git /src/spiralpp/.git
-
-RUN git reset --hard
-
-# install spiral env
-RUN git submodule update --init --recursive \
-    && wget -c https://github.com/mypaint/mypaint-brushes/archive/v1.3.0.tar.gz -O - | tar -xz -C third_party \
-    && git clone https://github.com/dli/paint third_party/paint \
-    && patch third_party/paint/shaders/setbristles.frag third_party/paint-setbristles.patch
-
-WORKDIR /src/spiralpp/spiral-envs
-
-RUN pip install --no-cache-dir six scipy
-
-RUN patch setup.py setup.patch
-RUN patch CMakeLists.txt cmakelists.patch
-
-RUN pip install -e .
-
 WORKDIR /src/spiralpp
 
 # Collect and install grpc.
+RUN conda install protobuf
 RUN ./scripts/install_grpc.sh
 
 # Install nest.
