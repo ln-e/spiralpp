@@ -27,7 +27,7 @@ RUN bash Miniconda3-latest-Linux-x86_64.sh -b
 
 ENV PATH /root/miniconda3/bin:$PATH
 
-ENV CONDA_PREFIX /root/miniconda3/envs/torchbeast
+ENV CONDA_PREFIX /root/miniconda3/envs/spiralpp
 
 # Clear .bashrc (it refuses to run non-interactively otherwise).
 RUN echo > ~/.bashrc
