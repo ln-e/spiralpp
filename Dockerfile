@@ -85,6 +85,8 @@ RUN pip install -e .
 # # RUN pip download torch
 # # RUN pip install torch*.whl
 #
+WORKDIR /src
+
 RUN git clone --single-branch --branch v1.5.0 --recursive https://github.com/pytorch/pytorch
 
 WORKDIR /src/pytorch
