@@ -18,7 +18,7 @@ $ conda activate spiralpp
 $ pip install -r requirements.txt
 ```
 
-Install spiral-gym
+Install spiral-envs
 
 Install required packages:
 
@@ -39,7 +39,7 @@ Finally, run the following command to install the spiral-gym package itself:
 
 ```shell
 $ git submodule update --init --recursive
-$ pip install -e spiral_gym/
+$ pip install -e spiral-envs/
 ```
 
 You will also need to obtain the brush files for the `libmypaint` environment
