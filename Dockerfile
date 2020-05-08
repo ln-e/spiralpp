@@ -106,7 +106,7 @@ RUN python setup.py install
 WORKDIR /src/spiralpp
 
 # Collect and install grpc.
-RUN conda install -c anaconda protobuf
+RUN conda install protobuf
 RUN ./scripts/install_grpc.sh
 
 # Install nest.
