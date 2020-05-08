@@ -93,7 +93,7 @@ RUN git submodule update --init --recursive \
     && git clone https://github.com/dli/paint third_party/paint \
     && patch third_party/paint/shaders/setbristles.frag third_party/paint-setbristles.patch
 
-WORKDIR /src/spiralpp/spiral-env
+WORKDIR /src/spiralpp/spiral-envs
 
 RUN pip install --no-cache-dir six scipy
 
