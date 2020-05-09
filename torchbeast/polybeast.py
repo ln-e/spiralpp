@@ -943,6 +943,8 @@ def test(flags):
         )
         action, *_ = agent_outputs
         frame, reward, done, _ = env.step(action.view(N).numpy())
+
+        done = torch.tensor([done])
         rewards.append(reward)
         frames.append(frame)
 
