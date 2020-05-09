@@ -1,5 +1,6 @@
 /*
  * Copyright (c) Facebook, Inc. and its affiliates.
+ * 30 April 2020 - Modified by urw7rseeh8fr
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -344,12 +345,16 @@ class ActorPool {
   ActorPool(int unroll_length, std::shared_ptr<BatchingQueue<>> learner_queue,
             std::shared_ptr<DynamicBatcher> inference_batcher,
             std::vector<std::string> env_server_addresses,
-            TensorNest initial_agent_state)
+            TensorNest initial_action,
+            TensorNest initial_agent_state,
+	        TensorNest image)
       : unroll_length_(unroll_length),
         learner_queue_(std::move(learner_queue)),
         inference_batcher_(std::move(inference_batcher)),
         env_server_addresses_(std::move(env_server_addresses)),
-        initial_agent_state_(std::move(initial_agent_state)) {}
+        initial_action_(std::move(initial_action)),
+        initial_agent_state_(std::move(initial_agent_state)),
+        image_(std::move(image)) {}
 
   void loop(int64_t loop_index, const std::string& address) {
     std::shared_ptr<grpc::Channel> channel =
@@ -379,33 +384,41 @@ class ActorPool {
     if (!stream->Read(&step_pb)) {
       throw py::connection_error("Initial read failed.");
     }
-
+      
+    TensorNest initial_action = initial_action_;
     TensorNest initial_agent_state = initial_agent_state_;
+    TensorNest initial_image = image_;
 
     TensorNest env_outputs = ActorPool::step_pb_to_nest(&step_pb);
-    TensorNest compute_inputs(std::vector({env_outputs, initial_agent_state}));
+    TensorNest compute_inputs(
+      std::vector({
+        env_outputs, initial_action, initial_agent_state, initial_image}));
     TensorNest all_agent_outputs =
-        inference_batcher_->compute(compute_inputs);  // Copy.
+      inference_batcher_->compute(compute_inputs);  // Copy.
 
     // Check this once per thread.
     if (!all_agent_outputs.is_vector()) {
       throw py::value_error("Expected agent output to be tuple");
     }
-    if (all_agent_outputs.get_vector().size() != 2) {
+    if (all_agent_outputs.get_vector().size() != 4) {
       throw py::value_error(
-          "Expected agent output to be ((action, ...), new_state) but got "
+          "Expected agent output to be"
+          "((action, ...), new_state, noise, condition) but got "
           "sequence of "
           "length " +
           std::to_string(all_agent_outputs.get_vector().size()));
     }
+    TensorNest image = all_agent_outputs.get_vector()[3];
+    TensorNest noise = all_agent_outputs.get_vector()[2];
     TensorNest agent_state = all_agent_outputs.get_vector()[1];
     TensorNest agent_outputs = all_agent_outputs.get_vector()[0];
+
     if (!agent_outputs.is_vector()) {
       throw py::value_error(
           "Expected first entry of agent output to be a (action, ...) tuple");
     }
 
-    TensorNest last(std::vector({env_outputs, agent_outputs}));
+    TensorNest last(std::vector({env_outputs, agent_outputs, noise}));
 
     rpcenv::Action action_pb;
     std::vector<TensorNest> rollout;
@@ -416,12 +429,13 @@ class ActorPool {
         for (int t = 1; t <= unroll_length_; ++t) {
           all_agent_outputs = inference_batcher_->compute(compute_inputs);
 
+	      image = all_agent_outputs.get_vector()[3];
+          noise = all_agent_outputs.get_vector()[2];
           agent_state = all_agent_outputs.get_vector()[1];
           agent_outputs = all_agent_outputs.get_vector()[0];
 
           // agent_outputs must be a tuple/list.
           const TensorNest& action = agent_outputs.get_vector().front();
-
           action_pb.Clear();
 
           fill_nest_pb(
@@ -435,15 +449,16 @@ class ActorPool {
             throw py::connection_error("Read failed.");
           }
           env_outputs = ActorPool::step_pb_to_nest(&step_pb);
-          compute_inputs = TensorNest(std::vector({env_outputs, agent_state}));
+          compute_inputs =
+            TensorNest(std::vector({env_outputs, action, agent_state, image}));
 
-          last = TensorNest(std::vector({env_outputs, agent_outputs}));
+          last = TensorNest(std::vector({env_outputs, agent_outputs, noise}));
           rollout.push_back(std::move(last));
         }
         last = rollout.back();
         learner_queue_->enqueue({
-            TensorNest(std::vector(
-                {batch(rollout, 0), std::move(initial_agent_state)})),
+            TensorNest(std::vector({batch(rollout, 0), std::move(initial_agent_state),
+                std::move(image)})),
         });
         rollout.clear();
         initial_agent_state = agent_state;  // Copy
@@ -561,6 +576,8 @@ class ActorPool {
   std::shared_ptr<DynamicBatcher> inference_batcher_;
   const std::vector<std::string> env_server_addresses_;
   TensorNest initial_agent_state_;
+  TensorNest initial_action_;
+  TensorNest image_;
 };
 
 PYBIND11_MODULE(actorpool, m) {
@@ -571,10 +588,13 @@ PYBIND11_MODULE(actorpool, m) {
   py::class_<ActorPool>(m, "ActorPool")
       .def(py::init<int, std::shared_ptr<BatchingQueue<>>,
                     std::shared_ptr<DynamicBatcher>, std::vector<std::string>,
-                    TensorNest>(),
+                    TensorNest, TensorNest, TensorNest>(),
            py::arg("unroll_length"), py::arg("learner_queue").none(false),
            py::arg("inference_batcher").none(false),
-           py::arg("env_server_addresses"), py::arg("initial_agent_state"))
+           py::arg("env_server_addresses"),
+           py::arg("initial_action"),
+      	   py::arg("initial_agent_state"),
+           py::arg("image"))
       .def("run", &ActorPool::run, py::call_guard<py::gil_scoped_release>())
       .def("count", &ActorPool::count);
 
