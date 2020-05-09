@@ -24,6 +24,7 @@
 # and slightly modified by (c) Facebook, Inc. and its affiliates.
 # 2 May 2020 Modified by urw7rs
 
+import torch
 import numpy as np
 import gym
 import cv2
@@ -83,7 +84,7 @@ class Batch(gym.ObservationWrapper):
     """
 
     def observation(self, obs):
-        return obs.view((1, 1) + obs.shape)
+        return torch.as_tensor(obs).view((1, 1) + obs.shape)
 
 
 def make_raw(env_id, config):
