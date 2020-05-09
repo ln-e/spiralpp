@@ -936,10 +936,12 @@ def test(flags):
             env.render()
         noise = torch.randn(1, 1, 10)
         agent_outputs, agent_state = model(
-            dict(obs=frame, condition=condition, action=action, noise=noise, done=done,),
+            dict(
+                obs=frame, condition=condition, action=action, noise=noise, done=done,
+            ),
             agent_state,
         )
-        action, _ = agent_outputs
+        action, *_ = agent_outputs
         frame, reward, done = env.step(action.view(N).numpy())
         rewards.append(reward)
         frames.append(frame)
