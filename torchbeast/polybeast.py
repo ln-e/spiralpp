@@ -110,7 +110,7 @@ parser.add_argument("--use_tca", action="store_true",
                     help="temporal credit assignment flag")
 parser.add_argument("--power_iters", default=20, type=int,
                     help="Spectral normalization power iterations")
-parser.add_argument("--dataset", default="omniglot",
+parser.add_argument("--dataset", default="celeba-hq",
                     help="Dataset name. MNIST, Omniglot, CelebA, CelebA-HQ is supported")
 
 # Loss settings.
