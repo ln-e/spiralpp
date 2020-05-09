@@ -77,6 +77,15 @@ class ToTensor(gym.ActionWrapper):
         return np.asarray([action.values()], dtype=np.int64)
 
 
+class Batch(gym.ObservationWrapper):
+    """
+    add T and B dimension to observation
+    """
+
+    def observation(self, obs):
+        return obs.view((1, 1) + obs.shape)
+
+
 def make_raw(env_id, config):
     env = gym.make("spiral:" + env_id)
     if len(config) > 0:

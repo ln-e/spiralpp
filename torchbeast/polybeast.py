@@ -861,6 +861,7 @@ def test(flags):
     if frame_width != flags.canvas_width:
         env = env_wrapper.WarpFrame(env, height=frame_width, width=frame_width)
     env = env_wrapper.wrap_pytorch(env)
+    env = env_wrapper.Batch(env)
 
     obs_shape = env.observation_space.shape
     if flags.condition:
@@ -870,7 +871,6 @@ def test(flags):
 
     action_shape = env.action_space.nvec.tolist()
     order = env.order
-    env.close()
 
     model = models.Net(
         obs_shape=obs_shape,
@@ -919,7 +919,7 @@ def test(flags):
         else:
             raise NotImplementedError
 
-        condition = dataset[randrange(len(dataset))]
+        condition = dataset[randrange(len(dataset))].view((1, 1) + obs_shape)
     else:
         condition = None
 
@@ -930,20 +930,13 @@ def test(flags):
     rewards = []
     frames = [frame]
     _, _, N = action.shape
-    C, H, W = frame.shape
 
     for i in range(flags.episode_length - 1):
         if flags.mode == "test_render":
             env.render()
-        noise = torch.tensor(1, 1, 10)
+        noise = torch.randn(1, 1, 10)
         agent_outputs, agent_state = model(
-            dict(
-                obs=frame.view(1, 1, C, H, W),
-                condition=condition.view(1, 1, C, H, W),
-                action=action,
-                noie=noise,
-                done=done,
-            ),
+            dict(obs=frame, condition=condition, action=action, noie=noise, done=done,),
             agent_state,
         )
         action, _ = agent_outputs
