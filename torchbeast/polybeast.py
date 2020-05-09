@@ -942,7 +942,7 @@ def test(flags):
             agent_state,
         )
         action, *_ = agent_outputs
-        frame, reward, done = env.step(action.view(N).numpy())
+        frame, reward, done, _ = env.step(action.view(N).numpy())
         rewards.append(reward)
         frames.append(frame)
 
@@ -987,6 +987,9 @@ def test(flags):
 def main(flags):
     if not flags.pipes_basename.startswith("unix:"):
         raise Exception("--pipes_basename has to be of the form unix:/some/path.")
+
+    if flags.mode != "train":
+        flags.start_servers = False
 
     if flags.start_servers:
 
