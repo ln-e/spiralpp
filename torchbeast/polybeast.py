@@ -409,7 +409,8 @@ def learn_D(
         else:
             p_real = D(real).view(-1)
 
-        label = torch.full((flags.batch_size,), real_label, device=flags.learner_device)
+        label = torch.full((flags.batch_size,), real_label,
+                           device=flags.learner_device).float()
         real_loss = F.binary_cross_entropy_with_logits(p_real, label)
 
         real_loss.backward()
@@ -429,7 +430,7 @@ def learn_D(
         else:
             p_fake = D(fake).view(-1)
 
-        label.fill_(fake_label)
+        label.fill_(fake_label).float()
         fake_loss = F.binary_cross_entropy_with_logits(
             p_fake, label.repeat(flags.unroll_length + 1)
         )
@@ -944,7 +945,6 @@ def test(flags):
         action, *_ = agent_outputs
         frame, reward, done, _ = env.step(action.view(N).numpy())
 
-        done = torch.tensor([done])
         rewards.append(reward)
         frames.append(frame)
 

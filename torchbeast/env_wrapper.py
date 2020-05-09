@@ -78,10 +78,15 @@ class ToTensor(gym.ActionWrapper):
         return np.asarray([action.values()], dtype=np.int64)
 
 
-class Batch(gym.ObservationWrapper):
+class Batch(gym.Wrapper):
     """
     add T and B dimension to observation
     """
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        obs = torch.as_tensor(obs).view((1, 1) + obs.shape)
+    def reset(self):
 
     def observation(self, obs):
         return torch.as_tensor(obs).view((1, 1) + obs.shape)
