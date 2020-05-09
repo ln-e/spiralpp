@@ -925,7 +925,7 @@ def test(flags):
 
     frame = env.reset()
     action = model.initial_action()
-    agent_state = model.initial_agent_state()
+    agent_state = model.initial_state()
     done = torch.tensor(False).view(1, 1)
     rewards = []
     frames = [frame]
