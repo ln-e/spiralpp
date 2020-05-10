@@ -8,6 +8,16 @@ For further details, see https://learning-to-paint.github.io for paper with gene
 
 ### Installing
 
+The easiest way to build and install all of PolyBeast's dependencies
+and run it is to use Docker:
+
+```shell
+$ docker build -t spiralpp .
+$ docker run --name spiralpp -it spiralpp /bin/bash
+```
+
+To run PolyBeast directly on Linux, follow this guide.
+
 #### Linux
 
 Create a new Conda environment, and install PolyBeast's requirements:
