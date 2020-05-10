@@ -126,7 +126,7 @@ parser.add_argument("--policy_learning_rate", default=0.0003, type=float,
                     metavar="LRP", help="Policy learning rate.")
 parser.add_argument("--discriminator_learning_rate", default=0.0001, type=float,
                     metavar="LRD", help="Discriminator learning rate.")
-parser.add_argument("--grad_norm_clipping", default=400.0, type=float,
+parser.add_argument("--grad_norm_clipping", default=40.0, type=float,
                     help="Global gradient norm clip.")
 
 # Misc settings.
