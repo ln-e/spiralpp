@@ -409,8 +409,9 @@ def learn_D(
         else:
             p_real = D(real).view(-1)
 
-        label = torch.full((flags.batch_size,), real_label,
-                           device=flags.learner_device).float()
+        label = torch.full(
+            (flags.batch_size,), real_label, device=flags.learner_device
+        ).float()
         real_loss = F.binary_cross_entropy_with_logits(p_real, label)
 
         real_loss.backward()
@@ -862,7 +863,7 @@ def test(flags):
     if frame_width != flags.canvas_width:
         env = env_wrapper.WarpFrame(env, height=frame_width, width=frame_width)
     env = env_wrapper.wrap_pytorch(env)
-    env = env_wrapper.Batch(env)
+    env = env_wrapper.AddDim(env)
 
     obs_shape = env.observation_space.shape
     if flags.condition:
@@ -930,7 +931,6 @@ def test(flags):
     done = torch.tensor(False).view(1, 1)
     rewards = []
     frames = [frame]
-    _, _, N = action.shape
 
     for i in range(flags.episode_length - 1):
         if flags.mode == "test_render":
@@ -943,7 +943,7 @@ def test(flags):
             agent_state,
         )
         action, *_ = agent_outputs
-        frame, reward, done, _ = env.step(action.view(N).numpy())
+        frame, reward, done, _ = env.step(action)
 
         rewards.append(reward)
         frames.append(frame)
