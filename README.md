@@ -16,6 +16,12 @@ $ docker build -t spiralpp .
 $ docker run --name spiralpp -it spiralpp /bin/bash
 ```
 
+or 
+
+```shell
+# docker run -it urw7rs/spiralpp /bin/bash
+```
+
 To run PolyBeast directly on Linux, follow this guide.
 
 #### Linux
