@@ -375,8 +375,8 @@ def learn(
         lock.release()
 
 
-real_label = 1
-fake_label = 0
+real_label = 1.0
+fake_label = 0.0
 
 
 def learn_D(
@@ -409,9 +409,7 @@ def learn_D(
         else:
             p_real = D(real).view(-1)
 
-        label = torch.full(
-            (flags.batch_size,), real_label, device=flags.learner_device
-        ).float()
+        label = torch.full((flags.batch_size,), real_label, device=flags.learner_device)
         real_loss = F.binary_cross_entropy_with_logits(p_real, label)
 
         real_loss.backward()
@@ -431,7 +429,7 @@ def learn_D(
         else:
             p_fake = D(fake).view(-1)
 
-        label.fill_(fake_label).float()
+        label.fill_(fake_label)
         fake_loss = F.binary_cross_entropy_with_logits(
             p_fake, label.repeat(flags.unroll_length + 1)
         )
