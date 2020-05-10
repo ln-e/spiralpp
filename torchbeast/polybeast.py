@@ -948,8 +948,8 @@ def test(flags):
         rewards.append(reward)
         frames.append(frame)
 
-    reward = torch.cat(reward)
-    frame = frame.cat(frames)
+    reward = torch.cat(rewards)
+    frame = torch.cat(frames)
 
     if flags.use_tca:
         frame = torch.flatten(frame, 0, 1)
@@ -963,9 +963,9 @@ def test(flags):
     D = D.eval()
     with torch.no_grad():
         if flags.condition:
-            p = D(frame, condition).view(-1, flags.batch_size)
+            p = D(frame, condition).view(-1, 1)
         else:
-            p = D(frame).view(-1, flags.batch_size)
+            p = D(frame).view(-1, 1)
 
         if flags.use_tca:
             d_reward = p[1:] - p[:-1]
@@ -981,7 +981,7 @@ def test(flags):
         "Episode ended after %d steps. Final reward: %.4f. Episode reward: %.4f,",
         flags.episode_length,
         reward[-1].item(),
-        rewards.sum(),
+        reward.sum(),
     )
     env.close()
 
