@@ -7,5 +7,5 @@ flake8
 black
 pre-commit
 ## torchvision  # for downloading datasets
-rquests
+requests
 tqdm
